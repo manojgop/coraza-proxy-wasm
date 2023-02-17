@@ -14,6 +14,7 @@ import (
 
 	"github.com/corazawaf/coraza/v3"
 	ctypes "github.com/corazawaf/coraza/v3/types"
+	"github.com/rs/zerolog"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 )
@@ -54,10 +55,14 @@ func (ctx *corazaPlugin) OnPluginStart(pluginConfigurationSize int) types.OnPlug
 		return types.OnPluginStartStatusFailed
 	}
 
+	zeroLogger := zerolog.New(nil).With().Timestamp().Logger()
+
 	// First we initialize our waf and our seclang parser
 	conf := coraza.NewWAFConfig().
 		WithErrorCallback(logError).
-		WithDebugLogger(&debugLogger{}).
+		WithDebugLogger(&debugLogger{
+			logger: &zeroLogger,
+		}).
 		// TODO(anuraaga): Make this configurable in plugin configuration.
 		// WithRequestBodyLimit(1024 * 1024 * 1024).
 		// WithRequestBodyInMemoryLimit(1024 * 1024 * 1024).

@@ -7,11 +7,13 @@ import (
 	"io"
 
 	"github.com/corazawaf/coraza/v3/loggers"
+	"github.com/rs/zerolog"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 )
 
 type debugLogger struct {
-	level loggers.LogLevel
+	level  loggers.LogLevel
+	logger *zerolog.Logger
 }
 
 var _ loggers.DebugLogger = (*debugLogger)(nil)
@@ -48,8 +50,32 @@ func (l *debugLogger) Trace(message string, args ...interface{}) {
 
 func (l *debugLogger) SetLevel(level loggers.LogLevel) {
 	l.level = level
+	zerolog.SetGlobalLevel(getZeroLogLevel(level))
 }
 
 func (l *debugLogger) SetOutput(w io.WriteCloser) {
 	proxywasm.LogWarn("ignoring SecDebugLog directive, debug logs are always routed to proxy logs")
+}
+
+func (l *debugLogger) GetLogger() *zerolog.Logger {
+	return l.logger
+}
+
+func getZeroLogLevel(level loggers.LogLevel) zerolog.Level {
+	switch level {
+	case loggers.LogLevelNoLog:
+		return zerolog.NoLevel
+	case loggers.LogLevelError:
+		return zerolog.ErrorLevel
+	case loggers.LogLevelWarn:
+		return zerolog.WarnLevel
+	case loggers.LogLevelInfo:
+		return zerolog.InfoLevel
+	case loggers.LogLevelDebug:
+		return zerolog.DebugLevel
+	case loggers.LogLevelTrace:
+		return zerolog.TraceLevel
+	default:
+		return zerolog.InfoLevel
+	}
 }
